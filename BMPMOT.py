@@ -3,7 +3,8 @@ import glob
 import sys
 
 
-def delete(root):  # Legacy delete method, use this in a function to automatically delte failed data, if possible, else, remove this
+def delete(
+        root):  # Legacy delete method, use this in a function to automatically delte failed data, if possible, else, remove this
     try:
         os.remove(f"{root}")
         return 0
@@ -29,8 +30,9 @@ def chunk(input_dir, output_dir, file_name, file_size, raw_name, chunk_size=4800
     compliant_header = b'BM\xd2\xe4\xde\x02\x00\x00\x00\x00z\x00\x00\x00l\x00\x00\x007\x13\x00\x00\xbf\x0c\x00\x00\x01\x00\x18\x00\x00\x00\x00\x00X\xe4\xde\x02\x13\x0b\x00\x00\x13\x0b\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00BGRs\x00\x00\x00\x00\x00\x00'
     assert chunk_size > 0  # chunk size must ALWAYS be greater than zero
     core_file = open(input_dir, 'rb')
-    output_dir_u = r"{}/{}/".format(output_dir, file_name)
-    if not os.path.exists(output_dir_u):  # Create the file specific directory if it does not already exist, usually it wont'
+    output_dir_u = r"{}{}/".format(output_dir, file_name)
+    if not os.path.exists(
+            output_dir_u):  # Create the file specific directory if it does not already exist, usually it wont'
         os.mkdir(output_dir_u)
     else:
         pass
@@ -41,18 +43,19 @@ def chunk(input_dir, output_dir, file_name, file_size, raw_name, chunk_size=4800
     meta_data(raw_name, output_dir_u, compliant_header, whole_chunks)
     for i in range(whole_chunks):
         chunk_data = core_file.read(chunk_size)
-        create_bmp(chunk_data, i, output_dir_u, compliant_header)
+        create_bmp(chunk_data, i, output_dir_u, compliant_header, raw_name)
 
 
-def create_bmp(chunk_data, iteration, output_dir, compliant_header):
+def create_bmp(chunk_data, iteration, output_dir, compliant_header, raw_name):
     """
+    :param raw_name:
     :param chunk_data: This is the data in the file, it is read in raw byte format such as \x00, reading file contents normally will not work
     :param iteration: This is the numbered chunk the iterator is currently on, it gives the file its name in relation to position in the file
     :param output_dir: This is the directory where the file is output in its multi-image form
     :param compliant_header: This is the generic header used to create images that are valid across all platforms
     :return: return the status, using the C method of return over python printing errors
     """
-    with open("{}/{}.bmp".format(output_dir, iteration), "wb+") as bmp_data:
+    with open("{}/{}.{}.bmp".format(output_dir, raw_name, iteration), "wb+") as bmp_data:
         bmp_data.write(compliant_header)
         bmp_data.write(chunk_data)
         bmp_data.close()
@@ -72,7 +75,7 @@ def demake_bmp(file_number, input_dir, output_dir, output_name):
     """
     new_list = []
     for i in range(file_number):
-        new_list.append(f"{input_dir}{i}.bmp")
+        new_list.append(f"{input_dir}{output_name}.{i}.bmp")
     master_file = f"{output_dir}{output_name}"
     delete(master_file)
     with open(master_file, 'ab+') as output_file:
@@ -80,9 +83,10 @@ def demake_bmp(file_number, input_dir, output_dir, output_name):
             temp_data = open(bmp_file, 'rb').read()
             output_file.write(temp_data[64:])
 
+
 def meta_data(file_name, output_dir, header, file_number):
     """
-    :param file_name: The name of the file being resolidified
+    :param file_name: The name of the file being consolidated
     :param output_dir: The directory to contain the meta file
     :param header: The generic header used to create meta header
     :param file_number: number of bmp files used to make a certain file
@@ -102,7 +106,7 @@ def meta_data(file_name, output_dir, header, file_number):
 def read_meta(meta_file):
     """
     :param meta_file: The file containing the meta data for end file
-    :return: Return current status in C style
+    :return: Return the name to be used
     """
     with open(meta_file, 'r') as meta_header:
         data = meta_header.readlines()
@@ -110,7 +114,6 @@ def read_meta(meta_file):
     for line in data:
         if "NAME:" in line:
             return line.split("NAME:")[-1]
-
 
 
 def make_master():
@@ -126,7 +129,7 @@ def make_master():
     :var input_files: The number of files to run iterations without correction for meta file
     :return:
     """
-    cwd = (os.getcwd()).replace("\\", "/")
+    cwd = os.getcwd()
     input_dir = "{}/Input/".format(cwd)
     output_dir = "{}/Output/".format(cwd)
     file_number = len(glob.glob(f"{input_dir}/*.*"))
@@ -141,19 +144,26 @@ def make_master():
     else:
         pass
     type_list = len(glob.glob(f"{input_dir}/*.bmpfile.bmp"))
+    item_number = len(glob.glob(f"{input_dir}/*.*"))
     if type_list < 1:
-        input_file = (glob.glob(f"{input_dir}/*.*"))[0]
-        file_name = (((input_file.split("/"))[-1]).split("."))[0]
-        raw_name = ((input_file.split("/"))[-1])
-        file_size = os.path.getsize(input_file)
-        chunk(input_file, output_dir, file_name, file_size, raw_name)
-    elif type_list == 1:
-        output_name = ((glob.glob(f"{input_dir}/*.bmpfile.bmp")[0]).split(".bmpfile.bmp"))[0].split("/")[-1]
-        input_files = glob.glob(f"{input_dir}/*.bmp")
-        functional = len(input_files) - 1
-        demake_bmp(functional, input_dir, output_dir, output_name)
-    elif type_list > 1:
-        print("Too many meta files!")
+        if item_number >= 1:
+            items = glob.glob(f"{input_dir}/*.*")
+            for item in items:
+                print(item)
+                input_file = item
+                file_name = (((input_file.split("/"))[-1]).split("."))[0]
+                raw_name = ((input_file.split("/"))[-1])
+                file_size = os.path.getsize(input_file)
+                chunk(input_file, output_dir, file_name, file_size, raw_name)
+        else:
+            print("Error with recursive build!")
+    elif type_list >= 1:
+        items = glob.glob(f"{input_dir}/*.bmpfile.bmp")
+        for item in items:
+            output_name = ((item).split(".bmpfile.bmp"))[0].split("/")[-1]
+            input_files = glob.glob(f"{input_dir}/{output_name}*.bmp")
+            functional = len(input_files) - 1
+            demake_bmp(functional, input_dir, output_dir, output_name)
     else:
         print("Cannot determine method, lacking data!")
 
