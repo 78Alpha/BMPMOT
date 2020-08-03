@@ -16,8 +16,8 @@ apm.add_argument("--output", "-o", default="./OUTPUT", metavar='DIR', type=str, 
 apm.add_argument("--chunk", '-c', metavar='INT', default=48000000, type=int, help="Size to split data")
 apm.add_argument('--version', "-v", action='version', version='%(prog)s 1.0.4')
 args = vars(apm.parse_args())
-_INPUT_ = args['input'].replace('\\', '/')
-_OUTPUT_ = args['output'].replace('\\', '/')
+_INPUT_ = args['input']
+_OUTPUT_ = args['output']
 
 # Header compliant with C based languages
 compliant_header = b'BM\xd2\xe4\xde\x02\x00\x00\x00\x00z\x00\x00\x00l\x00\x00\x007\x13\x00\x00\xbf\x0c\x00\x00\x01\x00\x18\x00\x00\x00\x00\x00X\xe4\xde\x02\x13\x0b\x00\x00\x13\x0b\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00BGRs\x00\x00\x00\x00\x00\x00'
@@ -205,7 +205,6 @@ def make_master(input_dir=_INPUT_, output_dir=_OUTPUT_):
     item_number = len(items)  # Count files
     if type_list < 1 <= item_number:  # If there are no meta files, proceed as normal
         for item in items:  # Iterate over list of files
-            item = item.replace("\\", "/")
             raw_name = ((item.split("/"))[-1])  # Get their raw names
             file_size = os.path.getsize(item)  # Get their file sizes
             print(f"Working On: {raw_name}\nFile Size: {file_size}")
@@ -213,7 +212,6 @@ def make_master(input_dir=_INPUT_, output_dir=_OUTPUT_):
             print(f"{raw_name} Complete!\n")
     elif type_list >= 1:  # If there are meta files present, they take priority and will be operated on
         for item in bmpfile_items:  # iterate over list of meta files
-            item = item.replace("\\", "/")
             demake_bmpx(meta_file=item)  # Begin rebuild process
     else:
         print("Cannot determine method, lacking data!")
