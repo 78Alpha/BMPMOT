@@ -1,3 +1,5 @@
+Will become dropped near start of 2021 due to new google photos update
+
 # BMPMOT
 BMPMan One Touch
 
